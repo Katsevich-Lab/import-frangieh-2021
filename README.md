@@ -40,7 +40,7 @@ The ODM file contains the expression information for all cells and
 features present in the raw data deposited in the Single Cell Portal.
 There is one metadata file corresponding to this full set of cells and
 features. The three additional metadata files contain cells from each of
-the three condnitions, and which contain exactly one gRNA.
+the three conditions.
 
 # Experimental design
 
@@ -129,9 +129,9 @@ gRNA_odm |>
 Note that only about 60% of cells received exactly one gRNA. About 10%
 of cells had no detected gRNAs, and about 30% of cells had more than one
 gRNA detected. It is unclear whether the association analysis in the
-paper was restricted to cells with exactly one gRNA, but we decided it’s
-safer to do so. Below is the number of cells in each experimental
-condition with exactly one gRNA:
+paper was restricted to cells with exactly one gRNA. We keep all cells
+(regardless of gRNA count) in the processed data. Below is the number of
+cells in each experimental condition with exactly one gRNA:
 
 ``` r
 dplyr::left_join(
@@ -157,8 +157,11 @@ dplyr::left_join(
 # QC’d datasets
 
 The QC’d datasets retain all of the original features, but only those
-cells that (a) have a given experimental condition and (b) have exactly
-one gRNA. Let’s take the control dataset as an example.
+cells that have a given experimental condition. The gene expression and
+gRNA indicator data contain three more cells than the protein expression
+data. We remove all cells that are not shared across datasets.
+
+Let’s take the control dataset as an example.
 
 ``` r
 gRNA_metadata_control_fp <- sprintf("%s/gRNA_assignments_ungrouped_metadata_control.rds", processed_gRNA_dir)
@@ -167,7 +170,7 @@ gRNA_control_odm
 ```
 
     ## A covariate_ondisc_matrix with the following components:
-    ##  An ondisc_matrix with 818 features and 30486 cells.
+    ##  An ondisc_matrix with 818 features and 57624 cells.
     ##  A cell covariate matrix with columns n_nonzero, n_umis.
     ##  A feature covariate matrix with columns mean_expression, coef_of_variation, n_nonzero, target, target_type.
 
@@ -178,7 +181,7 @@ gene_control_odm
 ```
 
     ## A covariate_ondisc_matrix with the following components:
-    ##  An ondisc_matrix with 23712 features and 30486 cells.
+    ##  An ondisc_matrix with 23712 features and 57624 cells.
     ##  A cell covariate matrix with columns n_nonzero, n_umis, condition, cluster_x, cluster_y.
     ##  A feature covariate matrix with columns mean_expression, coef_of_variation, n_nonzero.
 
@@ -189,12 +192,9 @@ protein_control_odm
 ```
 
     ## A covariate_ondisc_matrix with the following components:
-    ##  An ondisc_matrix with 24 features and 30486 cells.
+    ##  An ondisc_matrix with 24 features and 57624 cells.
     ##  A cell covariate matrix with columns n_nonzero, n_umis, condition.
     ##  A feature covariate matrix with columns mean_expression, coef_of_variation, n_nonzero.
-
-Note that all three of these datasets have 30486 cells (we computed this
-number at the end of the previous section).
 
 The gRNA data have 818 features, which is the total number of gRNAs used
 in the experiment.
