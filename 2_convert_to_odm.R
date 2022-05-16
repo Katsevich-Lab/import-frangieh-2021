@@ -16,7 +16,7 @@ processed_gene_dir <- sprintf(
   frangieh_dir, exper_name
 )
 processed_gRNA_dir <- sprintf(
-  "%sprocessed/%s/gRNA",
+  "%sprocessed/%s/grna",
   frangieh_dir, exper_name
 )
 processed_protein_dir <- sprintf(
@@ -158,7 +158,7 @@ rm(prot_expr_data)
 ### import gRNA data ###
 
 cat("Reading gRNA assignments from file...\n")
-gRNA_assignments_filename <- sprintf("%sraw/single-cell-portal/documentation/all_sgRNA_assignments.txt", frangieh_dir)
+gRNA_assignments_filename <- sprintf("%sraw/single-cell-portal/documentation/all_sgrna_assignments.txt", frangieh_dir)
 gRNA_list_filename <- sprintf("%sraw/supp_tables/41588_2021_779_MOESM3_ESM.xlsx", frangieh_dir)
 
 
@@ -216,8 +216,8 @@ gRNA_barcodes <- gRNA_list |>
     gRNA_name = `Guide Name`
   ) |>
   dplyr::select(gRNA_barcode, gRNA_name)
-odm_fp <- sprintf("%s/gRNA_assignments_ungrouped.odm", processed_gRNA_dir)
-metadata_fp <- sprintf("%s/gRNA_assignments_ungrouped_metadata.rds", processed_gRNA_dir)
+odm_fp <- sprintf("%s/grna_assignments_ungrouped.odm", processed_gRNA_dir)
+metadata_fp <- sprintf("%s/grna_assignments_ungrouped_metadata.rds", processed_gRNA_dir)
 ondisc::create_ondisc_matrix_from_R_matrix(
   r_matrix = gRNA_assignment_matrix,
   barcodes = cell_barcodes,

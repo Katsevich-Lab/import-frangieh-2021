@@ -19,7 +19,7 @@ processed_gene_dir <- sprintf(
   frangieh_dir, exper_name
 )
 processed_gRNA_dir <- sprintf(
-  "%sprocessed/%s/gRNA",
+  "%sprocessed/%s/grna",
   frangieh_dir, exper_name
 )
 processed_protein_dir <- sprintf(
@@ -33,8 +33,8 @@ gene_metadata_fp <- sprintf("%s/gene_expression_metadata.rds", processed_gene_di
 gene_odm <- ondisc::read_odm(gene_odm_fp, gene_metadata_fp)
 
 # read gRNA ODM
-gRNA_odm_fp <- sprintf("%s/gRNA_assignments_ungrouped.odm", processed_gRNA_dir)
-gRNA_metadata_fp <- sprintf("%s/gRNA_assignments_ungrouped_metadata.rds", processed_gRNA_dir)
+gRNA_odm_fp <- sprintf("%s/grna_assignments_ungrouped.odm", processed_gRNA_dir)
+gRNA_metadata_fp <- sprintf("%s/grna_assignments_ungrouped_metadata.rds", processed_gRNA_dir)
 gRNA_odm <- ondisc::read_odm(gRNA_odm_fp, gRNA_metadata_fp)
 
 # read protein ODM
@@ -87,7 +87,7 @@ for (condition in conditions) {
     ondisc::save_odm(metadata_fp = gene_metadata_fp)
 
   # subset and save gRNA ODM
-  gRNA_metadata_fp <- sprintf("%s/gRNA_assignments_ungrouped_metadata_%s.rds", processed_gRNA_dir, condition_name)
+  gRNA_metadata_fp <- sprintf("%s/grna_assignments_ungrouped_metadata_%s.rds", processed_gRNA_dir, condition_name)
   gRNA_odm[, cells_to_keep] |>
     ondisc::save_odm(metadata_fp = gRNA_metadata_fp)
 
