@@ -125,12 +125,22 @@ The protein expression data have `r protein_control_odm |> ondisc::nrow()` featu
 
 # Absent information
 
-At least two kinds of information are absent from the data: batch information and cell cycle information. 
+*Batch.* With this number of cells, it's almost certain that multiple sequencing batches were used. This seems to be suggested in the methods section: "15,000 cells loaded onto each of eight channels per condition using the 10X Chromium system..." I am guessing that "channel" here means sequencing batch or lane or something like that. However, batch effects are not accounted for in the analysis, or discussed at all in the paper. Unfortunately, batch information is also absent from the data published in the Single Cell Portal.
 
-- *Batch.* With this number of cells, it's almost certain that multiple sequencing batches were used. This seems to be suggested in the methods section: "15,000 cells loaded onto each of eight channels per condition using the 10X Chromium system..." I am guessing that "channel" here means sequencing batch or lane or something like that. However, batch effects are not accounted for in the analysis, or discussed at all in the paper. Unfortunately, batch information is also absent from the data published in the Single Cell Portal.
-- *Cell cycle.* The authors used cell cycle as a covariate for their MIMOSCA analysis. However, cell cycle information is apparently not available in the published data. According to the paper, cell cycle state was "assigned with Scanpy’s implementation of scoring cell cycle genes." So we might need to rerun this portion ourselves to obtain the cell cycle information.
+# Covariates
 
-# Note: data size
+The gene data include several key cell-specific covariates. We examine the "control" ODM as an example:
+
+```{r}
+gene_control_odm |>
+  ondisc::get_cell_covariates() |>
+  dplyr::select(n_nonzero, n_umis, s_score, g2m_score, phase) |>
+  head()
+```
+
+Covariates include `n_nonzero`, `n_umis`, `s_score`, `g2m_score`, and `phase`. Frangieh used the covariates `n_umis` and `phase` in their MIMOSCA regression. We computed the covariates `s_score`, `g2m_score`, and `phase` using Seurat's `CellCycleScoring` function, which is equivalent (as far as I can tell) to `scanpy`'s cell cycle function, which Frangieh used to compute cell cycle. The covariates `s_score` and `g2m_score` are continuous covariates related to cell cycle that are used to compute `phase`. Satija recommends regressing on `s_score` and `g2m_score` instead of `phase`.
+
+# Note: data size 
 
 The raw gene expression data, a CSV file of normalized gene expressions, is 25GB. There should be no reason for lab members to download this file onto their local machine, since it is already processed. Therefore, I discourage using `hpcc pull FRANGIEH_2021` to get the processed data onto a local machine (ideally, at some point we should extend the `hpcc pull` functionality to allow pulling of only the processed data). If you'd like to get the processed data onto your machine, I recommend using rsync directly: 
 ```

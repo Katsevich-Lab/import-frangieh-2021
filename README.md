@@ -182,7 +182,7 @@ gene_control_odm
 
     ## A covariate_ondisc_matrix with the following components:
     ##  An ondisc_matrix with 23712 features and 57624 cells.
-    ##  A cell covariate matrix with columns n_nonzero, n_umis, condition, cluster_x, cluster_y.
+    ##  A cell covariate matrix with columns n_nonzero, n_umis, condition, cluster_x, cluster_y, s_score, g2m_score, phase.
     ##  A feature covariate matrix with columns mean_expression, coef_of_variation, n_nonzero.
 
 ``` r
@@ -216,23 +216,44 @@ proteins of interest as well as four controls, as discussed above.
 
 # Absent information
 
-At least two kinds of information are absent from the data: batch
-information and cell cycle information.
+*Batch.* With this number of cells, it’s almost certain that multiple
+sequencing batches were used. This seems to be suggested in the methods
+section: “15,000 cells loaded onto each of eight channels per condition
+using the 10X Chromium system…” I am guessing that “channel” here means
+sequencing batch or lane or something like that. However, batch effects
+are not accounted for in the analysis, or discussed at all in the paper.
+Unfortunately, batch information is also absent from the data published
+in the Single Cell Portal.
 
--   *Batch.* With this number of cells, it’s almost certain that
-    multiple sequencing batches were used. This seems to be suggested in
-    the methods section: “15,000 cells loaded onto each of eight
-    channels per condition using the 10X Chromium system…” I am guessing
-    that “channel” here means sequencing batch or lane or something like
-    that. However, batch effects are not accounted for in the analysis,
-    or discussed at all in the paper. Unfortunately, batch information
-    is also absent from the data published in the Single Cell Portal.
--   *Cell cycle.* The authors used cell cycle as a covariate for their
-    MIMOSCA analysis. However, cell cycle information is apparently not
-    available in the published data. According to the paper, cell cycle
-    state was “assigned with Scanpy’s implementation of scoring cell
-    cycle genes.” So we might need to rerun this portion ourselves to
-    obtain the cell cycle information.
+# Covariates
+
+The gene data include several key cell-specific covariates. We examine
+the “control” ODM as an example:
+
+``` r
+gene_control_odm |>
+  ondisc::get_cell_covariates() |>
+  dplyr::select(n_nonzero, n_umis, s_score, g2m_score, phase) |>
+  head()
+```
+
+    ##        n_nonzero n_umis     s_score   g2m_score phase
+    ## CELL_1      3520  10832 -0.19767236  0.34070730   G2M
+    ## CELL_2      3531  10731  0.22472879  0.21481543     S
+    ## CELL_3      5541  28821 -0.07671482  0.15859704   G2M
+    ## CELL_4      4086  15322  0.13803863 -0.03044829     S
+    ## CELL_5      3178  10314 -0.09701530 -0.29331199    G1
+    ## CELL_6      3124   8810  0.03581570 -0.35851066     S
+
+Covariates include `n_nonzero`, `n_umis`, `s_score`, `g2m_score`, and
+`phase`. Frangieh used the covariates `n_umis` and `phase` in their
+MIMOSCA regression. We computed the covariates `s_score`, `g2m_score`,
+and `phase` using Seurat’s `CellCycleScoring` function, which is
+equivalent (as far as I can tell) to `scanpy`’s cell cycle function,
+which Frangieh used to compute cell cycle. The covariates `s_score` and
+`g2m_score` are continuous covariates related to cell cycle that are
+used to compute `phase`. Satija recommends regressing on `s_score` and
+`g2m_score` instead of `phase`.
 
 # Note: data size
 
