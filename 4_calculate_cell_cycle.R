@@ -10,14 +10,11 @@ backing_odm <- paste0(frangieh_dir, "processed/perturb-cite-seq/gene/gene_expres
 control_metadata <- paste0(frangieh_dir, "processed/perturb-cite-seq/gene/gene_expression_metadata_control.rds")
 co_culture_metadata <- paste0(frangieh_dir, "processed/perturb-cite-seq/gene/gene_expression_metadata_co-culture.rds")
 ifn_gamma_metadata <- paste0(frangieh_dir, "processed/perturb-cite-seq/gene/gene_expression_metadata_ifn-gamma.rds")
-
-# load_odms
-control_odm <- read_odm(odm_fp = backing_odm, metadata_fp = control_metadata)
-co_culture_odm <- read_odm(odm_fp = backing_odm, metadata_fp = co_culture_metadata)
-ifn_gamma_odm <- read_odm(odm_fp = backing_odm, metadata_fp = co_culture_metadata)
+dataset_list <- c(control_metadata, co_culture_metadata, ifn_gamma_metadata)
 
 # load the s genes and g2m genes
-avail_genes <- get_feature_ids(control_odm)
+avail_genes <- read_odm(backing_odm, control_metadata) |> get_feature_ids()
+# get_feature_ids(control_odm)
 s_genes <- cc.genes$s.genes[cc.genes$s.genes %in% avail_genes]
 g2m_genes <- cc.genes$g2m.genes[cc.genes$g2m.genes %in% avail_genes]
 
@@ -34,10 +31,9 @@ append_cell_cycle_info <- function(odm, s_genes, g2m_genes) {
                                                        phase = factor(s_obj$Phase))
 }
 
-control_odm <- append_cell_cycle_info(control_odm, s_genes, g2m_genes)
-co_culture_odm <- append_cell_cycle_info(co_culture_odm, s_genes, g2m_genes)
-ifn_gamma_odm <- append_cell_cycle_info(ifn_gamma_odm, s_genes, g2m_genes)
-
-save_odm(control_odm, control_metadata)
-save_odm(co_culture_odm, co_culture_metadata)
-save_odm(ifn_gamma_odm, ifn_gamma_metadata)
+# loop and apply
+for (dataset in dataset_list) {
+  odm <- read_odm(odm_fp = backing_odm, metadata_fp = dataset)
+  odm <- append_cell_cycle_info(odm, s_genes, g2m_genes)
+  save_odm(odm, dataset)
+}
