@@ -17,7 +17,7 @@ processed_dir_names <- matrix(NA, 3, 3, dimnames = list(exper_names, modalities)
 for(exper_name in exper_names){
   for(modality in modalities){
     processed_dir_name <- sprintf(
-      "%sprocessed_tmp/%s/%s",
+      "%sprocessed/%s/%s",
       frangieh_dir, exper_name, modality
     )
     processed_dir_names[exper_name, modality] <- processed_dir_name
