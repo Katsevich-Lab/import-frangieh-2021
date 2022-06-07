@@ -17,7 +17,7 @@ processed_dir_names <- matrix(NA, 3, 3, dimnames = list(exper_names, modalities)
 for(exper_name in exper_names){
   for(modality in modalities){
     processed_dir_name <- sprintf(
-      "%sprocessed/%s/%s",
+      "%sprocessed_tmp/%s/%s",
       frangieh_dir, exper_name, modality
     )
     processed_dir_names[exper_name, modality] <- processed_dir_name
@@ -73,7 +73,8 @@ for(exper_name in exper_names){
   # find cells in this experimental condition
   cells_to_keep <- gene_expr_metadata |> 
     dplyr::filter(condition == exper_name) |>
-    dplyr::pull(NAME)
+    dplyr::pull(NAME) |>
+    intersect(cell_barcodes_protein)
   # create ondisc matrix
   ondisc::create_ondisc_matrix_from_R_matrix(
     r_matrix = prot_expr_data[,cells_to_keep],
