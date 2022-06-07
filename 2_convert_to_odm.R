@@ -9,26 +9,21 @@
 ### retrieve top-level data directory ###
 frangieh_dir <- .get_config_path("LOCAL_FRANGIEH_2021_DATA_DIR")
 
-exper_name <- "perturb-cite-seq"
+exper_names <- c("co_culture", "control", "ifn_gamma")
+modalities <- c("gene", "grna_assignment", "protein")
 
-processed_gene_dir <- sprintf(
-  "%sprocessed/%s/gene",
-  frangieh_dir, exper_name
-)
-processed_gRNA_dir <- sprintf(
-  "%sprocessed/%s/grna",
-  frangieh_dir, exper_name
-)
-processed_protein_dir <- sprintf(
-  "%sprocessed/%s/protein",
-  frangieh_dir, exper_name
-)
+processed_dir_names <- matrix(NA, 3, 3, dimnames = list(exper_names, modalities))
 
-
-for (dir in c(processed_gene_dir, processed_gRNA_dir, processed_protein_dir)) {
-  if (!dir.exists(dir)) dir.create(dir, recursive = TRUE)
+for(exper_name in exper_names){
+  for(modality in modalities){
+    processed_dir_name <- sprintf(
+      "tmp_%sprocessed/%s/%s",
+      frangieh_dir, exper_name, modality
+    )
+    processed_dir_names[exper_name, modality] <- processed_dir_name
+    if (!dir.exists(processed_dir_name)) dir.create(processed_dir_name, recursive = TRUE)
+  }
 }
-
 
 ### import gene data ###
 cat("Reading gene expression matrix from file...\n")
@@ -52,7 +47,12 @@ gene_expr_metadata <- readr::read_csv(gene_expr_metadata_filename,
     .default = readr::col_character()
   ),
   comment = "TYPE"
-)
+) |>
+  dplyr::rowwise() |>
+  dplyr::mutate(condition = tolower(gsub("γ", "-gamma", condition)),
+                condition = gsub("-", "_", condition)) |>
+  dplyr::ungroup()
+
 # read gene expression clusters
 gene_expr_clusters <- readr::read_csv(gene_expr_cluster_filename,
   col_types = list(
@@ -88,25 +88,33 @@ gene_expr_data_unnorm <- gene_expr_data_norm |>
 # remove gene_expr_data_norm from workspace to save memory
 rm(gene_expr_data_norm)
 
-# save to ondisc matrix
-cat("Creating ODM for gene expression matrix...\n")
-odm_fp <- sprintf("%s/gene_expression_matrix.odm", processed_gene_dir)
-metadata_fp <- sprintf("%s/gene_expression_metadata.rds", processed_gene_dir)
-ondisc::create_ondisc_matrix_from_R_matrix(
-  r_matrix = gene_expr_data_unnorm,
-  barcodes = cell_barcodes_gene,
-  features_df = gene_names,
-  odm_fp = odm_fp,
-  metadata_fp = metadata_fp
-) |>
-  # add condition information to cell covariates
-  ondisc::mutate_cell_covariates(
-    condition = gene_expr_metadata$condition[match(cell_barcodes_gene, gene_expr_metadata$NAME)],
-    cluster_x = gene_expr_clusters$X[match(cell_barcodes_gene, gene_expr_clusters$NAME)],
-    cluster_y = gene_expr_clusters$Y[match(cell_barcodes_gene, gene_expr_clusters$NAME)]
+# split by experimental condition and save to disk
+for(exper_name in exper_names){
+  cat(sprintf("Creating ODM for %s gene expression matrix...\n", exper_name))
+  processed_gene_dir <- processed_dir_names[exper_name, "gene"]
+  odm_fp <- sprintf("%s/gene_expression_matrix.odm", processed_gene_dir)
+  metadata_fp <- sprintf("%s/gene_expression_metadata.rds", processed_gene_dir)
+  # find cells in this experimental condition
+  cells_to_keep <- gene_expr_metadata |> 
+    dplyr::filter(condition == exper_name) |>
+    dplyr::pull(NAME)
+  # create ondisc matrix
+  ondisc::create_ondisc_matrix_from_R_matrix(
+    r_matrix = gene_expr_data_unnorm[,cells_to_keep],
+    barcodes = cells_to_keep,
+    features_df = gene_names,
+    odm_fp = odm_fp,
+    metadata_fp = metadata_fp
   ) |>
-  # save to disk
-  ondisc::save_odm(metadata_fp = metadata_fp)
+    # add condition information to cell covariates
+    ondisc::mutate_cell_covariates(
+      condition = gene_expr_metadata$condition[match(cells_to_keep, gene_expr_metadata$NAME)],
+      cluster_x = gene_expr_clusters$X[match(cells_to_keep, gene_expr_clusters$NAME)],
+      cluster_y = gene_expr_clusters$Y[match(cells_to_keep, gene_expr_clusters$NAME)]
+    ) |>
+    # save to disk
+    ondisc::save_odm(metadata_fp = metadata_fp) 
+}
 
 # remove gene_expr_data_unnorm from workspace to save memory
 rm(gene_expr_data_unnorm)
@@ -136,21 +144,29 @@ prot_expr_data <- prot_expr_data |>
   dplyr::select(-Protein) |>
   as.matrix()
 
-# save to ondisc matrix
-cat("Creating ODM for protein expression matrix...\n")
-odm_fp <- sprintf("%s/protein_expression_matrix.odm", processed_protein_dir)
-metadata_fp <- sprintf("%s/protein_expression_metadata.rds", processed_protein_dir)
-ondisc::create_ondisc_matrix_from_R_matrix(
-  r_matrix = prot_expr_data,
-  barcodes = cell_barcodes_protein,
-  features_df = protein_names,
-  odm_fp = odm_fp,
-  metadata_fp = metadata_fp
-) |>
-  # add condition information to cell covariates
-  ondisc::mutate_cell_covariates(condition = gene_expr_metadata$condition[match(cell_barcodes_protein, gene_expr_metadata$NAME)]) |>
-  # save to disk
-  ondisc::save_odm(metadata_fp = metadata_fp)
+# split by experimental condition and save to disk
+for(exper_name in exper_names){
+  cat(sprintf("Creating ODM for %s protein expression matrix...\n", exper_name))
+  processed_protein_dir <- processed_dir_names[exper_name, "protein"]
+  odm_fp <- sprintf("%s/protein_expression_matrix.odm", processed_protein_dir)
+  metadata_fp <- sprintf("%s/protein_expression_metadata.rds", processed_protein_dir)
+  # find cells in this experimental condition
+  cells_to_keep <- gene_expr_metadata |> 
+    dplyr::filter(condition == exper_name) |>
+    dplyr::pull(NAME)
+  # create ondisc matrix
+  ondisc::create_ondisc_matrix_from_R_matrix(
+    r_matrix = prot_expr_data[,cells_to_keep],
+    barcodes = cells_to_keep,
+    features_df = protein_names,
+    odm_fp = odm_fp,
+    metadata_fp = metadata_fp
+  ) |>
+    # add condition information to cell covariates
+    ondisc::mutate_cell_covariates(condition = gene_expr_metadata$condition[match(cells_to_keep, gene_expr_metadata$NAME)]) |>
+    # save to disk
+    ondisc::save_odm(metadata_fp = metadata_fp)
+}
 
 # remove prot_expr_data from workspace to save memory
 rm(prot_expr_data)
@@ -158,7 +174,7 @@ rm(prot_expr_data)
 ### import gRNA data ###
 
 cat("Reading gRNA assignments from file...\n")
-gRNA_assignments_filename <- sprintf("%sraw/single-cell-portal/documentation/all_sgrna_assignments.txt", frangieh_dir)
+gRNA_assignments_filename <- sprintf("%sraw/single-cell-portal/documentation/all_sgRNA_assignments.txt", frangieh_dir)
 gRNA_list_filename <- sprintf("%sraw/supp_tables/41588_2021_779_MOESM3_ESM.xlsx", frangieh_dir)
 
 
