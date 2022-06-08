@@ -174,7 +174,6 @@ gene_expr_cluster_filename <- sprintf("%sraw/single-cell-portal/cluster/5fd0e449
 
 # read gene expression data
 gene_expr_data <- readr::read_csv(gene_expr_filename,
-  n_max = 3,
   col_types = list(
     GENE = readr::col_character(),
     .default = readr::col_double()
