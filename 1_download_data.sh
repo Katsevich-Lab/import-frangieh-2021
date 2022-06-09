@@ -35,7 +35,7 @@ cd raw
 # download the file with all the download links 
 # NOTE: the URL contains a single-use authorization code that must be generated
 # at https://singlecell.broadinstitute.org/single_cell/study/SCP1064/multi-modal-pooled-perturb-cite-seq-screens-in-patient-models-define-novel-mechanisms-of-cancer-immune-evasion#/
-wget --no-check-certificate "https://singlecell.broadinstitute.org/single_cell/api/v1/bulk_download/generate_curl_config?accessions=SCP1064&auth_code=2gLduKwi&directory=all&context=study" -O cfg.txt
+wget --no-check-certificate "https://singlecell.broadinstitute.org/single_cell/api/v1/bulk_download/generate_curl_config?accessions=SCP1064&auth_code=opUxZ30g&directory=all&context=study" -O cfg.txt
 
 # download the files
 echo "Downloading single cell portal files!"
