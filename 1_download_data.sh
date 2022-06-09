@@ -10,6 +10,9 @@
 # get paths to local files
 source ~/.research_config
 
+# get current directory
+curr_dir=$(pwd)
+
 # check if data directory already exists
 if [ -d "$LOCAL_FRANGIEH_2021_DATA_DIR" ] 
 then
@@ -56,5 +59,8 @@ mkdir supp_tables
 cd supp_tables
 supp_tab_url="https://static-content.springer.com/esm/art%3A10.1038%2Fs41588-021-00779-1/MediaObjects/41588_2021_779_MOESM3_ESM.xlsx"
 wget $supp_tab_url
+
+# go back to current directory
+cd $curr_dir
 
 echo "Done!"
