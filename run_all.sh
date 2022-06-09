@@ -1,4 +1,5 @@
 # Note: This script should be run on an HPC with at least 250GB of RAM.
+# Note: This script requires the R packages readr, dplyr, ondisc, readxl, Seurat, lowmoi
 module load R/R-4.1.2
 source ~/.research_config
 source 1_download_data.sh
