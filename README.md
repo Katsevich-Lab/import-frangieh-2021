@@ -148,7 +148,7 @@ gRNA_control_odm
 ```
 
     ## A covariate_ondisc_matrix with the following components:
-    ##  An ondisc_matrix with 818 features and 57624 cells.
+    ##  A logical ondisc_matrix with 818 features and 57624 cells.
     ##  A cell covariate matrix with columns n_nonzero.
     ##  A feature covariate matrix with columns n_nonzero, target, target_type.
 
@@ -160,8 +160,8 @@ gene_control_odm
 ```
 
     ## A covariate_ondisc_matrix with the following components:
-    ##  An ondisc_matrix with 23712 features and 57624 cells.
-    ##  A cell covariate matrix with columns n_nonzero, n_umis, condition, cluster_x, cluster_y, s_score, g2m_score, phase.
+    ##  An integer-valued ondisc_matrix with 23712 features and 57624 cells.
+    ##  A cell covariate matrix with columns n_nonzero, n_umis, condition, cluster_x, cluster_y, s_score, g2m_score, phase, batch.
     ##  A feature covariate matrix with columns mean_expression, coef_of_variation, n_nonzero.
 
 ``` r
@@ -171,8 +171,8 @@ protein_control_odm
 ```
 
     ## A covariate_ondisc_matrix with the following components:
-    ##  An ondisc_matrix with 24 features and 57624 cells.
-    ##  A cell covariate matrix with columns n_nonzero, n_umis, condition.
+    ##  An integer-valued ondisc_matrix with 24 features and 57624 cells.
+    ##  A cell covariate matrix with columns n_nonzero, n_umis, condition, s_score, g2m_score, phase.
     ##  A feature covariate matrix with columns mean_expression, coef_of_variation, n_nonzero.
 
 The gRNA data have 818 features, which is the total number of gRNAs used
@@ -197,17 +197,6 @@ Note that all three modalities have 57624 cells. There were a few cells
 present in either the gRNA or gene data but not in the protein data, and
 these were removed on import.
 
-# Absent information
-
-*Batch.* With this number of cells, it’s almost certain that multiple
-sequencing batches were used. This seems to be suggested in the methods
-section: “15,000 cells loaded onto each of eight channels per condition
-using the 10X Chromium system…” I am guessing that “channel” here means
-sequencing batch or lane or something like that. However, batch effects
-are not accounted for in the analysis, or discussed at all in the paper.
-Unfortunately, batch information is also absent from the data published
-in the Single Cell Portal.
-
 # Covariates
 
 The gene data include several key cell-specific covariates. We examine
@@ -216,27 +205,31 @@ the “control” ODM as an example:
 ``` r
 gene_control_odm |>
   ondisc::get_cell_covariates() |>
-  dplyr::select(n_nonzero, n_umis, s_score, g2m_score, phase) |>
+  dplyr::select(n_nonzero, n_umis, s_score, g2m_score, phase, batch) |>
   head()
 ```
 
-    ##        n_nonzero n_umis     s_score   g2m_score phase
-    ## CELL_1      3520  10832 -0.19767236  0.34070730   G2M
-    ## CELL_2      3531  10731  0.22472879  0.21481543     S
-    ## CELL_3      5541  28821 -0.07671482  0.15859704   G2M
-    ## CELL_4      4086  15322  0.13803863 -0.03044829     S
-    ## CELL_5      3178  10314 -0.09701530 -0.29331199    G1
-    ## CELL_6      3124   8810  0.03581570 -0.35851066     S
+    ##        n_nonzero n_umis     s_score   g2m_score phase batch
+    ## CELL_1      3520  10832 -0.19767236  0.34070730   G2M    A1
+    ## CELL_2      3531  10731  0.22472879  0.21481543     S    A1
+    ## CELL_3      5541  28821 -0.07671482  0.15859704   G2M    A1
+    ## CELL_4      4086  15322  0.13803863 -0.03044829     S    A1
+    ## CELL_5      3178  10314 -0.09701530 -0.29331199    G1    A1
+    ## CELL_6      3124   8810  0.03581570 -0.35851066     S    A1
 
-Covariates include `n_nonzero`, `n_umis`, `s_score`, `g2m_score`, and
-`phase`. Frangieh used the covariates `n_umis` and `phase` in their
-MIMOSCA regression. We computed the covariates `s_score`, `g2m_score`,
-and `phase` using Seurat’s `CellCycleScoring` function, which is
-equivalent (as far as I can tell) to `scanpy`’s cell cycle function,
-which Frangieh used to compute cell cycle. The covariates `s_score` and
-`g2m_score` are continuous covariates related to cell cycle that are
-used to compute `phase`. Satija recommends regressing on `s_score` and
-`g2m_score` instead of `phase`.
+Covariates include `n_nonzero`, `n_umis`, `s_score`, `g2m_score`,
+`phase`, and `batch`. Frangieh used the covariates `n_umis` and `phase`
+in their MIMOSCA regression. We computed the covariates `s_score`,
+`g2m_score`, and `phase` using Seurat’s `CellCycleScoring` function,
+which is equivalent (as far as I can tell) to `scanpy`’s cell cycle
+function, which Frangieh used to compute cell cycle. The covariates
+`s_score` and `g2m_score` are continuous covariates related to cell
+cycle that are used to compute `phase`. Satija recommends regressing on
+`s_score` and `g2m_score` instead of `phase`. Each of the three
+conditions were sequenced in eight batches. These batches are labeled
+`A1`, `B1`, …, `H1` for the control condition, `A2`, `B2`, …, `H2` for
+the co-culture condition, and `A3`, `B3`, …, `H3` for the ifn-gamma
+condition.
 
 # Note: data size
 

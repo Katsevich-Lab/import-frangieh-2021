@@ -5,3 +5,4 @@ source ~/.research_config
 source 1_download_data.sh
 Rscript 2_convert_to_odm.R
 Rscript 3_calculate_cell_cycle.R
+Rscript 4_add_batch_info.R
