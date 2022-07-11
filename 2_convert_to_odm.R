@@ -92,24 +92,24 @@ for(exper_name in exper_names){
 # remove prot_expr_data from workspace to save memory
 rm(prot_expr_data)
 
-### import gRNA data ###
+### import grna data ###
 
-cat("Reading gRNA assignments from file...\n")
-gRNA_assignments_filename <- sprintf("%sraw/single-cell-portal/documentation/all_sgRNA_assignments.txt", frangieh_dir)
-gRNA_list_filename <- sprintf("%sraw/supp_tables/41588_2021_779_MOESM3_ESM.xlsx", frangieh_dir)
+cat("Reading grna assignments from file...\n")
+grna_assignments_filename <- sprintf("%sraw/single-cell-portal/documentation/all_sgRNA_assignments.txt", frangieh_dir)
+grna_list_filename <- sprintf("%sraw/supp_tables/41588_2021_779_MOESM3_ESM.xlsx", frangieh_dir)
 
-gRNA_assignments <- readr::read_csv(gRNA_assignments_filename)
-gRNA_list <- readxl::read_excel(gRNA_list_filename,
-                                sheet = 1,  # first sheet corresponds to gRNA list
+grna_assignments <- readr::read_csv(grna_assignments_filename)
+grna_list <- readxl::read_excel(grna_list_filename,
+                                sheet = 1,  # first sheet corresponds to grna list
                                 skip = 2,   # two first lines are header
-                                n_max = 818 # only the first 818 gRNAs used for perturb-CITE-seq
+                                n_max = 818 # only the first 818 grnas used for perturb-CITE-seq
 ) 
 
 # extract the experimental design information
-experimental_design <- gRNA_list |>
+experimental_design <- grna_list |>
   dplyr::rowwise() |>
   dplyr::mutate(
-    # those gRNAs with "SITE" in their names are non-targeting
+    # those grnas with "SITE" in their names are non-targeting
     target_type = ifelse(grepl("SITE", `Guide Name`),
                          "non-targeting",
                          "gene"
@@ -121,30 +121,30 @@ experimental_design <- gRNA_list |>
   ) |>
   dplyr::ungroup()
 
-# extract the gRNA barcodes
-gRNA_barcodes <- gRNA_list |>
+# extract the grna barcodes
+grna_barcodes <- grna_list |>
   dplyr::rename(
-    gRNA_barcode = `sgRNA Sequence`,
-    gRNA_name = `Guide Name`
+    grna_barcode = `sgRNA Sequence`,
+    grna_name = `Guide Name`
   ) |>
-  dplyr::select(gRNA_barcode, gRNA_name)
+  dplyr::select(grna_barcode, grna_name)
 
 # split by experimental condition and save to disk
 for(exper_name in exper_names){
-  cat(sprintf("Creating ODM for %s gRNA assignment matrix...\n", exper_name))
-  processed_gRNA_dir <- processed_dir_names[exper_name, "grna_assignment"]
-  odm_fp <- sprintf("%s/grna_assignments_ungrouped.odm", processed_gRNA_dir)
-  metadata_fp <- sprintf("%s/grna_assignments_ungrouped_metadata.rds", processed_gRNA_dir)
+  cat(sprintf("Creating ODM for %s grna assignment matrix...\n", exper_name))
+  processed_grna_dir <- processed_dir_names[exper_name, "grna_assignment"]
+  odm_fp <- sprintf("%s/grna_assignments_ungrouped.odm", processed_grna_dir)
+  metadata_fp <- sprintf("%s/grna_assignments_ungrouped_metadata.rds", processed_grna_dir)
   # find cells in this experimental condition
   cells_to_keep <- gene_expr_metadata |> 
     dplyr::filter(condition == exper_name) |>
     dplyr::pull(NAME) |>
-    intersect(cell_barcodes_protein)   # there are a few cells for which gRNA
+    intersect(cell_barcodes_protein)   # there are a few cells for which grna
   # assignment data are available but not
   # protein expression data, so subset cells
   # to only those in protein data
-  # get gRNA assignment list
-  gRNA_assignment_list <- gRNA_assignments[match(cells_to_keep, gRNA_assignments$Cell), ] |>
+  # get grna assignment list
+  grna_assignment_list <- grna_assignments[match(cells_to_keep, grna_assignments$Cell), ] |>
     dplyr::pull("sgRNAs") |>
     lapply(function(sgRNA){
       if(is.na(sgRNA)) ""
@@ -153,12 +153,12 @@ for(exper_name in exper_names){
   # create odm 
   ondisc::convert_assign_list_to_sparse_odm(
     cell_barcodes = cells_to_keep,
-    gRNA_ids = gRNA_barcodes$gRNA_name,
-    gRNA_assignment_list = gRNA_assignment_list,
+    grna_ids = grna_barcodes$grna_name,
+    grna_assignment_list = grna_assignment_list,
     odm_fp = odm_fp,
     metadata_fp = metadata_fp
   ) |>
-    # add gRNA metadata to feature covariates
+    # add grna metadata to feature covariates
     ondisc::mutate_feature_covariates(
       target = experimental_design$target,
       target_type = experimental_design$target_type

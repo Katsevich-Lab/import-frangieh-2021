@@ -1,6 +1,6 @@
 ---
 title: "Frangieh (2021) Data Documentation"
-author: "Gene Katsevich;"
+author: "Gene Katsevich"
 date: June 8, 2022
 output: github_document 
 ---
