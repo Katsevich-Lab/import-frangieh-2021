@@ -123,10 +123,6 @@ The protein expression data have `r protein_control_odm |> ondisc::nrow()` featu
 
 Note that all three modalities have `r protein_control_odm |> ondisc::ncol()` cells. There were a few cells present in either the gRNA or gene data but not in the protein data, and these were removed on import.
 
-# Absent information
-
-*Batch.* With this number of cells, it's almost certain that multiple sequencing batches were used. This seems to be suggested in the methods section: "15,000 cells loaded onto each of eight channels per condition using the 10X Chromium system..." I am guessing that "channel" here means sequencing batch or lane or something like that. However, batch effects are not accounted for in the analysis, or discussed at all in the paper. Unfortunately, batch information is also absent from the data published in the Single Cell Portal.
-
 # Covariates
 
 The gene data include several key cell-specific covariates. We examine the "control" ODM as an example:
@@ -134,11 +130,11 @@ The gene data include several key cell-specific covariates. We examine the "cont
 ```{r}
 gene_control_odm |>
   ondisc::get_cell_covariates() |>
-  dplyr::select(n_nonzero, n_umis, s_score, g2m_score, phase) |>
+  dplyr::select(n_nonzero, n_umis, s_score, g2m_score, phase, batch) |>
   head()
 ```
 
-Covariates include `n_nonzero`, `n_umis`, `s_score`, `g2m_score`, and `phase`. Frangieh used the covariates `n_umis` and `phase` in their MIMOSCA regression. We computed the covariates `s_score`, `g2m_score`, and `phase` using Seurat's `CellCycleScoring` function, which is equivalent (as far as I can tell) to `scanpy`'s cell cycle function, which Frangieh used to compute cell cycle. The covariates `s_score` and `g2m_score` are continuous covariates related to cell cycle that are used to compute `phase`. Satija recommends regressing on `s_score` and `g2m_score` instead of `phase`.
+Covariates include `n_nonzero`, `n_umis`, `s_score`, `g2m_score`, `phase`, and `batch`. Frangieh used the covariates `n_umis` and `phase` in their MIMOSCA regression. We computed the covariates `s_score`, `g2m_score`, and `phase` using Seurat's `CellCycleScoring` function, which is equivalent (as far as I can tell) to `scanpy`'s cell cycle function, which Frangieh used to compute cell cycle. The covariates `s_score` and `g2m_score` are continuous covariates related to cell cycle that are used to compute `phase`. Satija recommends regressing on `s_score` and `g2m_score` instead of `phase`. Each of the three conditions were sequenced in eight batches. These batches are labeled  `A1`, `B1`, ..., `H1` for the control condition, `A2`, `B2`, ..., `H2` for the co-culture condition, and `A3`, `B3`, ..., `H3` for the ifn-gamma condition.
 
 # Note: data size 
 
