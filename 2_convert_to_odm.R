@@ -81,7 +81,8 @@ for(exper_name in exper_names){
     barcodes = cells_to_keep,
     features_df = protein_names,
     odm_fp = odm_fp,
-    metadata_fp = metadata_fp
+    metadata_fp = metadata_fp,
+    comp_level = 0
   ) |>
     # add condition information to cell covariates
     ondisc::mutate_cell_covariates(condition = exper_name) |>
@@ -235,7 +236,8 @@ for(exper_name in exper_names){
     barcodes = cells_to_keep,
     features_df = gene_names,
     odm_fp = odm_fp,
-    metadata_fp = metadata_fp
+    metadata_fp = metadata_fp,
+    comp_level = 0
   ) |>
     # add condition information to cell covariates
     ondisc::mutate_cell_covariates(
